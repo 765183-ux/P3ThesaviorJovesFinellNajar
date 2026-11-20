@@ -1,45 +1,49 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private float jumpForce = 5f;
-    [SerializeField] private bool isGrounded = true;
-    // Start is called before the first frame update
+    [Header("Movement Settings")]
+    public float moveSpeed = 7f;
+    public float jumpForce = 12f;
+
+    [Header("Ground Detection")]
+    public Transform groundCheck;
+    public float groundCheckRadius = 0.2f;
+    public LayerMask groundLayer;
+
+    private Rigidbody2D rb;
+    private float moveInput;
+    private bool isGrounded;
+    private Animator anim;
+    private SpriteRenderer spriteRenderer;
+
+
     void Start()
     {
-
+        rb = GetComponent<Rigidbody2D>();
     }
 
-    // Update is called once per frame
-   private void Update()
+    void Update()
     {
-        Jump();
-    }
+        // Get left/right input (-1 for Left/A, 1 for Right/D)
+        moveInput = Input.GetAxisRaw("Horizontal");
 
-    //create a private method for player movement
-    private void MovePlayer()
-    {
-        BitVector32 movement = new BitVector32(0);
+        // Check if the groundCheck circle overlaps with the Ground layer
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-    }
-    //create a private method for player jumping
-    private void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        // Trigger jump when pressing Space (or default Jump button) while grounded
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
+       
     }
 
 
-
-
-
-
-
-}
-
+    void FixedUpdate()
+    {
+        // Apply horizontal movement smoothly in FixedUpdate for consistent physics
+        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+    }
+} 
